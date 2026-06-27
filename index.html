@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ha">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NaijaCall - Pi Network PWA</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <style>
+        :root {
+            --pi-purple: #e0a904;
+            --pi-dark: #1a0933;
+            --bg-light: #f8f9fa;
+            --text-dark: #212529;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: var(--pi-dark);
+            color: white;
+            width: 100%;
+            padding: 20px 0;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-bottom: 4px solid var(--pi-purple);
+        }
+
+        .container {
+            max-width: 500px;
+            width: 90%;
+            margin: 30px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        h2 {
+            color: var(--pi-dark);
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .pi-logo {
+            width: 100px;
+            height: 100px;
+            margin: 15px 0;
+        }
+
+        .btn {
+            background-color: var(--pi-purple);
+            color: var(--pi-dark);
+            border: none;
+            padding: 14px 28px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(224, 169, 4, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(224, 169, 4, 0.5);
+        }
+
+        .user-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f1f3f5;
+            border-radius: 10px;
+            display: none;
+            text-align: left;
+        }
+
+        footer {
+            margin-top: auto;
+            padding: 20px;
+            font-size: 12px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        NaijaCall Pi App 🚀
+    </header>
+
+    <div class="container">
+        <h2>Barka da Zuwa Pioneer! 👋</h2>
+        <p>Wannan shi ne shafin NaijaCall da aka haɗa na musamman domin Pi Browser da Pi Ecosystem.</p>
+        
+        <!-- Alamar Pi (Zaka iya canza src idan kana da hoto) -->
+        <svg class="pi-logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="45" fill="#1a0933"/>
+            <path d="M35 30H65V38H54V60C54 65 50 68 45 68C40 68 37 64 37 60V45H45V60C45 61 46 62 47 62C48 62 49 61 49 60V38H35V30Z" fill="#e0a904"/>
+        </svg>
+
+        <button class="btn" id="login-btn" onclick="authPi()">Haɗa da Pi Account</button>
+
+        <div class="user-info" id="user-box">
+            <p><strong>Suna:</strong> <span id="username">...</span></p>
+            <p><strong>UID:</strong> <span id="uid">...</span></p>
+        </div>
+
+        <button class="btn" style="background:#1a0933; color:white; margin-top:20px;" onclick="payPi()">Gudanar da Biya (Pay 1 Pi)</button>
+    </div>
+
+    <footer>
+        &copy; 2026 NaijaCall Pi Clone. Duka haƙƙoƙi sun adana.
+    </footer>
+
+    <script>
+        // Fara amfani da Pi SDK
+        const Pi = window.Pi;
+        Pi.init({ version: "2.0", sandbox: true }); // Zaka canza sandbox ya koma false idan ka tura shi live
+
+        async function authPi() {
+            try {
+                const scopes = ['username', 'payments'];
+                function onIncompletePaymentFound(payment) {
+                    console.log("Akwai biyan da bai kammala ba:", payment);
+                };
+
+                const auth = await Pi.authenticate(scopes, onIncompletePaymentFound);
+                
+                document.getElementById('username').innerText = auth.user.username;
+                document.getElementById('uid').innerText = auth.user.uid;
+                document.getElementById('user-box').style.display = 'block';
+                document.getElementById('login-btn').innerText = "An Haɗa Kenan ✅";
+            } catch (err) {
+                alert("Kuskure wajen haɗawa da Pi: " + err.message);
+            }
+        }
+
+        async function payPi() {
+            try {
+                const paymentData = {
+                    amount: 1.0,
+                    memo: "Biyan kuɗin kiran NaijaCall a Pi Network",
+                    metadata: { type: "call_subscription" }
+                };
+
+                const callbacks = {
+                    onReadyForServerApproval: function(paymentId) {
+                        console.log("Jiran amincewar Server: ", paymentId);
+                    },
+                    onReadyForServerCompletion: function(paymentId, txid) {
+                        console.log("An gama biya: ", txid);
+                        alert("An karɓi kudin ku, Na gode!");
+                    },
+                    onCancel: function(paymentId) {
+                        console.log("An fasa biya");
+                    },
+                    onError: function(error, payment) {
+                        console.error("Kuskure:", error);
+                    }
+                };
+
+                await Pi.createPayment(paymentData, callbacks);
+            } catch (err) {
+                alert("Ba za a iya kiran tsarin biya ba: " + err.message);
+            }
+        }
+
+        // Rikodin Service Worker na PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+            .then(() => console.log('Service Worker Registered'))
+            .catch(err => console.log('SW Registration Failed', err));
+        }
+    </script>
+</body>
+</html>

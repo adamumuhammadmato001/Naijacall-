@@ -1,0 +1,16 @@
+{
+  "short_name": "NaijaCall",
+  "name": "NaijaCall Pi Network PWA",
+  "icons": [
+    {
+      "src": "https://minepi.com/wp-content/uploads/2021/11/pi-logo.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#1a0933",
+  "theme_color": "#e0a904",
+  "display": "standalone",
+  "orientation": "portrait"
+}
