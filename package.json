@@ -1,0 +1,22 @@
+{
+  "name": "naijacall-pi",
+  "version": "1.0.0",
+  "description": "NaijaCall Pi - Nigerian diaspora calling PWA on Pi Network",
+  "main": "index.js",
+  "scripts": {
+    "start": "http-server public -p 3000",
+    "build": "echo 'Static PWA - no build step required'"
+  },
+  "keywords": [
+    "pi-network",
+    "calling",
+    "pwa",
+    "nigeria",
+    "diaspora"
+  ],
+  "author": "Adam Mohammed",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
