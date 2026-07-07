@@ -1,196 +1,1487 @@
 <!DOCTYPE html>
-<html lang="ha">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NaijaCall - Pi Network PWA</title>
-    <link rel="manifest" href="manifest.json">
-    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-    <style>
-        :root {
-            --pi-purple: #e0a904;
-            --pi-dark: #1a0933;
-            --bg-light: #f8f9fa;
-            --text-dark: #212529;
-        }
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="theme-color" content="#008751"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="NaijaCall"/>
+  <meta name="description" content="Call Nigeria from anywhere in the world. Affordable international calls."/>
+  <title>NaijaCall – Call Nigeria</title>
+  <link rel="manifest" href="manifest.json"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-light);
-            color: var(--text-dark);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-        header {
-            background-color: var(--pi-dark);
-            color: white;
-            width: 100%;
-            padding: 20px 0;
-            text-align: center;
-            font-size: 24px;
-            font-weight: bold;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            border-bottom: 4px solid var(--pi-purple);
-        }
+    :root {
+      --green:   #008751;
+      --green2:  #00a862;
+      --green3:  #005c36;
+      --white:   #ffffff;
+      --ivory:   #f4f8f5;
+      --dark:    #0b1f12;
+      --gray:    #6b7c6e;
+      --border:  #d0e4d6;
+      --red:     #d72b2b;
+      --gold:    #e8b400;
+      --gold2:   #ffd000;
+      --card-bg: #ffffff;
+      --bottom-h: 68px;
+    }
 
-        .container {
-            max-width: 500px;
-            width: 90%;
-            margin: 30px auto;
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-            text-align: center;
-        }
+    html, body {
+      height: 100%; height: 100dvh; overflow: hidden;
+      font-family: 'Inter', sans-serif;
+      background: #1a1a1a;
+      color: var(--dark);
+      display: flex;
+      justify-content: center;
+    }
 
-        h2 {
-            color: var(--pi-dark);
-            margin-bottom: 10px;
-        }
+    /* ── MOBILE APP WRAPPER ── */
+    #app-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 430px;
+      height: 100%; height: 100dvh;
+      background: var(--ivory);
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(0,0,0,0.5);
+    }
 
-        p {
-            color: #666;
-            line-height: 1.6;
-        }
+    /* ── SCREENS ── */
+    .screen {
+      position: absolute; inset: 0;
+      display: none; flex-direction: column;
+      overflow: hidden;
+    }
+    .screen.active { display: flex; }
 
-        .pi-logo {
-            width: 100px;
-            height: 100px;
-            margin: 15px 0;
-        }
+    /* ── SCROLL AREA ── */
+    .scroll-area {
+      flex: 1; overflow-y: auto;
+      padding-bottom: calc(var(--bottom-h) + 16px);
+      -webkit-overflow-scrolling: touch;
+    }
 
-        .btn {
-            background-color: var(--pi-purple);
-            color: var(--pi-dark);
-            border: none;
-            padding: 14px 28px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 30px;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 15px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 10px rgba(224, 169, 4, 0.3);
-        }
+    /* ── STATUS BAR SPACER ── */
+    .status-bar { height: env(safe-area-inset-top, 0px); background: var(--green3); }
 
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(224, 169, 4, 0.5);
-        }
+    /* ── TOP BAR ── */
+    .top-bar {
+      background: var(--green);
+      padding: 14px 18px 14px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .top-bar .logo { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; color: #fff; }
+    .top-bar .logo span { color: var(--gold); }
+    .top-bar .top-right { display: flex; align-items: center; gap: 10px; }
+    .badge-plan {
+      background: var(--gold); color: var(--dark);
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.05em;
+      padding: 3px 9px; border-radius: 20px; text-transform: uppercase;
+    }
+    .avatar-btn {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      border: none; color: #fff; font-size: 1rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
 
-        .user-info {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f1f3f5;
-            border-radius: 10px;
-            display: none;
-            text-align: left;
-        }
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: var(--bottom-h);
+      background: var(--white);
+      border-top: 1px solid var(--border);
+      display: flex; align-items: stretch;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      z-index: 200;
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.07);
+    }
+    .nav-item {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 3px;
+      cursor: pointer; border: none; background: none;
+      color: var(--gray); transition: color 0.15s;
+    }
+    .nav-item.active { color: var(--green); }
+    .nav-item .nav-icon { font-size: 1.3rem; line-height: 1; }
+    .nav-item .nav-label { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.03em; }
+    .nav-call-btn {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--green); border: 4px solid var(--white);
+      box-shadow: 0 3px 12px rgba(0,135,81,0.4);
+      color: #fff; font-size: 1.4rem;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; margin-top: -20px;
+      transition: background 0.15s, transform 0.12s;
+      flex-shrink: 0;
+    }
+    .nav-call-btn:active { transform: scale(0.94); background: var(--green2); }
 
-        footer {
-            margin-top: auto;
-            padding: 20px;
-            font-size: 12px;
-            color: #888;
-        }
-    </style>
+    /* ── SPLASH SCREEN ── */
+    #screen-splash {
+      background: linear-gradient(160deg, var(--green3) 0%, var(--green) 60%, #00c46a 100%);
+      align-items: center; justify-content: center; gap: 0;
+    }
+    .splash-logo {
+      font-family: 'Syne', sans-serif; font-size: 3rem; font-weight: 800;
+      color: #fff; letter-spacing: -1px;
+    }
+    .splash-logo span { color: var(--gold2); }
+    .splash-flag { font-size: 4rem; margin-bottom: 10px; animation: pulse 2s infinite; }
+    .splash-sub { color: rgba(255,255,255,0.75); font-size: 0.9rem; margin-top: 8px; }
+    .splash-loader {
+      width: 48px; height: 4px; background: rgba(255,255,255,0.2);
+      border-radius: 4px; margin-top: 48px; overflow: hidden;
+    }
+    .splash-loader-bar {
+      height: 100%; background: var(--gold2); border-radius: 4px;
+      animation: load 1.8s ease forwards;
+    }
+    @keyframes load { from { width: 0%; } to { width: 100%; } }
+    @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+
+    /* ── ONBOARDING ── */
+    #screen-onboard {
+      background: var(--white);
+      align-items: center; justify-content: center;
+    }
+    .onboard-wrap { padding: 32px 24px; text-align: center; max-width: 360px; }
+    .onboard-emoji { font-size: 5rem; margin-bottom: 16px; }
+    .onboard-title { font-family:'Syne',sans-serif; font-size: 1.7rem; font-weight: 800; margin-bottom: 10px; color: var(--dark); }
+    .onboard-title em { color: var(--green); font-style: normal; }
+    .onboard-body { color: var(--gray); font-size: 0.9rem; line-height: 1.6; margin-bottom: 32px; }
+    .steps-row { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; text-align: left; }
+    .step { display: flex; align-items: center; gap: 12px; }
+    .step-num {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--green); color: #fff;
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.9rem;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .step-text { font-size: 0.85rem; color: var(--dark); }
+    .btn-primary {
+      width: 100%; padding: 16px;
+      background: var(--green); color: #fff;
+      border: none; border-radius: 14px;
+      font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 800;
+      cursor: pointer; transition: background 0.15s, transform 0.12s;
+    }
+    .btn-primary:active { transform: scale(0.98); background: var(--green2); }
+    .btn-secondary {
+      width: 100%; padding: 14px; margin-top: 10px;
+      background: none; color: var(--gray);
+      border: 1.5px solid var(--border); border-radius: 14px;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer;
+    }
+
+    /* ── AUTH SCREEN ── */
+    #screen-auth { background: var(--white); }
+    .auth-header {
+      background: linear-gradient(135deg, var(--green3), var(--green));
+      padding: 48px 24px 32px; text-align: center; color: #fff;
+    }
+    .auth-header h2 { font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800; }
+    .auth-header p { opacity:0.8; font-size:0.85rem; margin-top:6px; }
+    .auth-body { padding: 28px 24px; }
+    .auth-tabs { display:flex; gap:0; border:1.5px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:24px; }
+    .auth-tab {
+      flex:1; padding:11px; text-align:center; font-weight:700; font-size:0.85rem;
+      border:none; background:none; color:var(--gray); cursor:pointer; transition:all 0.15s;
+    }
+    .auth-tab.active { background:var(--green); color:#fff; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display:block; font-size:0.78rem; font-weight:700; margin-bottom:6px; color:var(--dark); }
+    .form-input {
+      width:100%; border:1.5px solid var(--border); border-radius:12px;
+      padding:13px 14px; font-family:'Inter',sans-serif; font-size:0.95rem;
+      color:var(--dark); background:var(--ivory); outline:none; transition:border-color 0.2s;
+    }
+    .form-input:focus { border-color:var(--green); background:#fff; }
+    .auth-divider { text-align:center; color:var(--gray); font-size:0.75rem; margin:14px 0; }
+    .social-login {
+      display:flex; gap:10px; margin-bottom:16px;
+    }
+    .social-btn {
+      flex:1; border:1.5px solid var(--border); border-radius:12px; padding:12px;
+      font-size:0.82rem; font-weight:600; cursor:pointer; background:#fff;
+      display:flex; align-items:center; justify-content:center; gap:6px;
+    }
+    .terms { font-size:0.7rem; color:var(--gray); text-align:center; margin-top:12px; }
+    .terms a { color:var(--green); }
+
+    /* ── HOME SCREEN ── */
+    #screen-home { background: var(--ivory); }
+    .home-hero {
+      background: linear-gradient(135deg, var(--green3) 0%, var(--green) 100%);
+      padding: 20px 18px 28px; color: #fff;
+    }
+    .home-greeting { font-size:0.82rem; opacity:0.8; margin-bottom:3px; }
+    .home-name { font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; margin-bottom:14px; }
+    .plan-card {
+      background: rgba(255,255,255,0.13);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 14px; padding: 14px 16px;
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .plan-card-left strong { display:block; font-size:1rem; font-weight:700; }
+    .plan-card-left span { font-size:0.72rem; opacity:0.8; }
+    .plan-upgrade-btn {
+      background: var(--gold); color: var(--dark);
+      border:none; border-radius:10px; padding:8px 14px;
+      font-weight:800; font-size:0.78rem; cursor:pointer;
+      font-family:'Syne',sans-serif;
+    }
+    .calls-remaining {
+      display:flex; align-items:center; gap:6px;
+      margin-top:12px; font-size:0.8rem; opacity:0.85;
+    }
+    .calls-bar {
+      flex:1; height:5px; background:rgba(255,255,255,0.2); border-radius:5px; overflow:hidden;
+    }
+    .calls-fill { height:100%; background:var(--gold2); border-radius:5px; transition:width 0.5s; }
+
+    .section-title {
+      font-family:'Syne',sans-serif; font-size:0.85rem; font-weight:800;
+      color:var(--gray); text-transform:uppercase; letter-spacing:0.1em;
+      padding: 18px 18px 8px;
+    }
+
+    .quick-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 18px; }
+    .quick-card {
+      background:var(--white); border:1.5px solid var(--border); border-radius:14px;
+      padding:16px; cursor:pointer; transition:border-color 0.15s, box-shadow 0.15s;
+    }
+    .quick-card:active { border-color:var(--green); box-shadow:0 2px 10px rgba(0,135,81,0.15); }
+    .quick-icon { font-size:1.8rem; margin-bottom:8px; }
+    .quick-name { font-size:0.82rem; font-weight:700; }
+    .quick-desc { font-size:0.7rem; color:var(--gray); margin-top:2px; }
+
+    .recent-list { padding: 0 18px; display:flex; flex-direction:column; gap:8px; }
+    .recent-item {
+      background:var(--white); border:1.5px solid var(--border); border-radius:14px;
+      padding:13px 14px; display:flex; align-items:center; gap:12px; cursor:pointer;
+    }
+    .recent-avatar {
+      width:40px; height:40px; border-radius:50%;
+      background:linear-gradient(135deg,var(--green),var(--green2));
+      color:#fff; font-family:'Syne',sans-serif; font-weight:800; font-size:1rem;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .recent-info { flex:1; }
+    .recent-info strong { display:block; font-size:0.88rem; font-weight:700; }
+    .recent-info span { font-size:0.72rem; color:var(--gray); }
+    .recent-call-btn {
+      width:36px; height:36px; border-radius:50%;
+      background:#e8f5ee; border:none; color:var(--green);
+      font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    }
+    .promo-banner {
+      margin: 14px 18px; background:linear-gradient(135deg,#005c36,#008751);
+      border-radius:14px; padding:16px; color:#fff;
+      display:flex; align-items:center; gap:12px;
+    }
+    .promo-text strong { display:block; font-size:0.9rem; font-weight:700; }
+    .promo-text span { font-size:0.72rem; opacity:0.85; }
+    .promo-btn {
+      background:var(--gold); color:var(--dark);
+      border:none; border-radius:8px; padding:8px 12px;
+      font-weight:800; font-size:0.75rem; cursor:pointer; white-space:nowrap;
+      font-family:'Syne',sans-serif;
+    }
+
+    /* ── DIALER SCREEN ── */
+    #screen-dialer { background: var(--ivory); }
+    .dialer-body { padding: 20px 18px; }
+    .caller-select-box {
+      background:var(--white); border:1.5px solid var(--border); border-radius:14px;
+      padding:13px 14px; margin-bottom:14px;
+    }
+    .csl { font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--green); margin-bottom:6px; }
+    .csl-row { display:flex; align-items:center; gap:8px; }
+    .csl-flag { font-size:1.4rem; }
+    .csl-info { flex:1; }
+    .csl-info strong { font-size:0.88rem; display:block; }
+    .csl-info span { font-size:0.72rem; color:var(--gray); }
+    select.csl-sel {
+      border:1.5px solid var(--border); border-radius:8px;
+      padding:7px 10px; font-size:0.8rem; font-family:'Inter',sans-serif;
+      background:var(--ivory); color:var(--dark);
+    }
+
+    .number-display {
+      background:var(--white); border:1.5px solid var(--border); border-radius:14px;
+      padding:14px 16px; margin-bottom:14px; text-align:center;
+    }
+    .ng-prefix { font-size:0.72rem; color:var(--green); font-weight:700; margin-bottom:4px; }
+    .number-text {
+      font-family:'Syne',sans-serif; font-size:2rem; font-weight:800;
+      color:var(--dark); letter-spacing:2px; min-height:48px;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .number-text.placeholder { color:#ccc; font-size:1rem; font-family:'Inter',sans-serif; font-weight:400; }
+
+    .method-row { display:flex; gap:8px; margin-bottom:16px; }
+    .mth {
+      flex:1; border:1.5px solid var(--border); border-radius:12px;
+      padding:10px 6px; text-align:center; cursor:pointer; background:var(--white);
+      transition:all 0.15s;
+    }
+    .mth.active { border-color:var(--green); background:#e8f5ee; }
+    .mth .mi { font-size:1.3rem; }
+    .mth .mn { font-size:0.68rem; font-weight:700; margin-top:2px; }
+
+    .pad { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px; }
+    .key {
+      aspect-ratio:1; border:1.5px solid var(--border); border-radius:14px;
+      background:var(--white); cursor:pointer;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      transition:background 0.12s, transform 0.1s;
+    }
+    .key:active { background:#e8f5ee; transform:scale(0.94); }
+    .key .kn { font-family:'Syne',sans-serif; font-size:1.5rem; font-weight:800; }
+    .key .kl { font-size:0.55rem; color:var(--gray); letter-spacing:0.1em; margin-top:-2px; }
+    .key.back { background:var(--ivory); }
+    .key.back .kn { font-size:1.2rem; }
+    .key.zero .kn { font-size:1.5rem; }
+
+    .call-action {
+      display:flex; gap:10px; align-items:center;
+    }
+    .call-now-btn {
+      flex:1; padding:18px; background:var(--green); color:#fff;
+      border:none; border-radius:16px; cursor:pointer;
+      font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:800;
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      transition:background 0.15s, transform 0.12s;
+      box-shadow:0 4px 16px rgba(0,135,81,0.3);
+    }
+    .call-now-btn:active { transform:scale(0.98); }
+    .call-now-btn:disabled { background:#9dbfa9; box-shadow:none; }
+    .save-contact-btn {
+      width:52px; height:52px; border-radius:14px;
+      border:1.5px solid var(--border); background:var(--white);
+      font-size:1.2rem; cursor:pointer;
+    }
+
+    .locked-overlay {
+      position:absolute; inset:0; background:rgba(11,31,18,0.7);
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      z-index:50; border-radius:14px; gap:10px; padding:20px; text-align:center;
+    }
+    .locked-overlay .lock-icon { font-size:2.5rem; }
+    .locked-overlay h3 { color:#fff; font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:800; }
+    .locked-overlay p { color:rgba(255,255,255,0.75); font-size:0.8rem; }
+    .unlock-btn {
+      background:var(--gold); color:var(--dark); border:none; border-radius:12px;
+      padding:12px 24px; font-weight:800; font-size:0.9rem; cursor:pointer;
+      font-family:'Syne',sans-serif; margin-top:4px;
+    }
+
+    /* ── PLANS SCREEN ── */
+    #screen-plans { background: var(--ivory); }
+    .plans-header {
+      background:linear-gradient(135deg,var(--green3),var(--green));
+      padding:28px 20px 24px; text-align:center; color:#fff;
+    }
+    .plans-header h2 { font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800; }
+    .plans-header p { opacity:0.8; font-size:0.85rem; margin-top:5px; }
+    .plans-body { padding:20px 18px; }
+    .toggle-row {
+      display:flex; background:var(--white); border:1.5px solid var(--border);
+      border-radius:12px; overflow:hidden; margin-bottom:20px;
+    }
+    .toggle-opt {
+      flex:1; padding:11px; text-align:center;
+      font-weight:700; font-size:0.82rem; border:none; background:none;
+      color:var(--gray); cursor:pointer; transition:all 0.15s;
+    }
+    .toggle-opt.active { background:var(--green); color:#fff; }
+    .save-badge {
+      background:var(--gold); color:var(--dark);
+      font-size:0.6rem; font-weight:800; padding:2px 6px; border-radius:6px; margin-left:4px;
+    }
+    .plan-cards { display:flex; flex-direction:column; gap:12px; }
+    .plan-card-item {
+      background:var(--white); border:2px solid var(--border); border-radius:16px;
+      padding:20px; cursor:pointer; transition:border-color 0.15s;
+      position:relative;
+    }
+    .plan-card-item.popular { border-color:var(--green); }
+    .popular-tag {
+      position:absolute; top:-1px; left:50%; transform:translateX(-50%);
+      background:var(--green); color:#fff; font-size:0.65rem; font-weight:800;
+      padding:3px 14px; border-radius:0 0 10px 10px; letter-spacing:0.05em;
+      text-transform:uppercase;
+    }
+    .plan-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:12px; }
+    .plan-name { font-family:'Syne',sans-serif; font-size:1rem; font-weight:800; }
+    .plan-price { text-align:right; }
+    .plan-price strong { display:block; font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800; color:var(--green); }
+    .plan-price span { font-size:0.7rem; color:var(--gray); }
+    .plan-feats { display:flex; flex-direction:column; gap:7px; }
+    .plan-feat { display:flex; align-items:center; gap:8px; font-size:0.8rem; }
+    .plan-feat .check { color:var(--green); font-size:0.9rem; }
+    .plan-feat .cross { color:#ccc; font-size:0.9rem; }
+    .subscribe-btn {
+      width:100%; margin-top:14px; padding:14px;
+      background:var(--green); color:#fff; border:none; border-radius:12px;
+      font-family:'Syne',sans-serif; font-size:0.95rem; font-weight:800;
+      cursor:pointer; transition:background 0.15s;
+    }
+    .subscribe-btn:hover { background:var(--green2); }
+    .subscribe-btn.outline {
+      background:none; color:var(--green); border:2px solid var(--green);
+    }
+
+    .paystack-note {
+      background:#fff; border:1.5px solid var(--border); border-radius:12px;
+      padding:14px; margin-top:14px; display:flex; align-items:center; gap:10px;
+    }
+    .paystack-note .ps-icon { font-size:1.5rem; }
+    .paystack-note p { font-size:0.75rem; color:var(--gray); }
+    .paystack-note strong { color:var(--dark); }
+
+    /* ── PROFILE SCREEN ── */
+    #screen-profile { background: var(--ivory); }
+    .profile-header {
+      background:linear-gradient(135deg,var(--green3),var(--green));
+      padding:32px 20px 24px; text-align:center; color:#fff;
+    }
+    .profile-avatar {
+      width:72px; height:72px; border-radius:50%;
+      background:rgba(255,255,255,0.2); border:3px solid rgba(255,255,255,0.4);
+      font-family:'Syne',sans-serif; font-size:2rem; font-weight:800;
+      display:flex; align-items:center; justify-content:center; margin:0 auto 10px;
+    }
+    .profile-name { font-family:'Syne',sans-serif; font-size:1.2rem; font-weight:800; }
+    .profile-email { font-size:0.8rem; opacity:0.75; margin-top:3px; }
+    .profile-plan-tag {
+      display:inline-block; margin-top:10px;
+      background:var(--gold); color:var(--dark);
+      font-size:0.7rem; font-weight:800; padding:4px 12px; border-radius:20px;
+    }
+    .profile-body { padding:16px 18px; }
+    .settings-group { margin-bottom:14px; }
+    .settings-group-title {
+      font-size:0.7rem; font-weight:800; text-transform:uppercase;
+      letter-spacing:0.1em; color:var(--gray); margin-bottom:8px;
+    }
+    .settings-list { background:var(--white); border:1.5px solid var(--border); border-radius:14px; overflow:hidden; }
+    .settings-item {
+      display:flex; align-items:center; gap:12px;
+      padding:14px 16px; border-bottom:1px solid var(--border); cursor:pointer;
+    }
+    .settings-item:last-child { border-bottom:none; }
+    .settings-icon { font-size:1.1rem; width:22px; text-align:center; }
+    .settings-text { flex:1; font-size:0.85rem; font-weight:600; }
+    .settings-arrow { color:var(--gray); font-size:0.75rem; }
+    .settings-value { font-size:0.78rem; color:var(--green); font-weight:600; }
+
+    /* ── TOAST ── */
+    .toast {
+      position:fixed; bottom:calc(var(--bottom-h) + 12px); left:50%; transform:translateX(-50%);
+      background:var(--dark); color:#fff; padding:11px 20px;
+      border-radius:30px; font-size:0.82rem; font-weight:600;
+      white-space:nowrap; z-index:999; opacity:0;
+      transition:opacity 0.25s; pointer-events:none;
+    }
+    .toast.show { opacity:1; }
+
+    /* ── MODAL ── */
+    .modal-bg {
+      position:fixed; inset:0; background:rgba(0,0,0,0.55);
+      z-index:500; display:none; align-items:flex-end; justify-content:center;
+    }
+    .modal-bg.open { display:flex; }
+    .modal {
+      background:var(--white); border-radius:24px 24px 0 0;
+      padding:28px 24px 40px; width:100%; max-width:480px;
+    }
+    .modal-handle { width:40px; height:4px; background:var(--border); border-radius:4px; margin:0 auto 20px; }
+    .modal h3 { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800; margin-bottom:8px; }
+    .modal p { font-size:0.85rem; color:var(--gray); margin-bottom:20px; }
+    .modal-close {
+      position:absolute; top:16px; right:16px;
+      background:var(--ivory); border:none; border-radius:50%;
+      width:32px; height:32px; font-size:1rem; cursor:pointer;
+    }
+
+    /* ── UTIL ── */
+    .hidden { display:none !important; }
+    .mt-12 { margin-top:12px; }
+    .row-between { display:flex; align-items:center; justify-content:space-between; }
+  </style>
 </head>
 <body>
+<div id="app-wrapper">
 
-    <header>
-        NaijaCall Pi App 🚀
-    </header>
+<!-- ══════════════════════════════════════════
+     SPLASH SCREEN
+══════════════════════════════════════════ -->
+<div class="screen active" id="screen-splash">
+  <div class="splash-flag">🇳🇬</div>
+  <div class="splash-logo">Naija<span>Call</span></div>
+  <div class="splash-sub">Call Nigeria from anywhere in the world</div>
+  <div class="splash-loader"><div class="splash-loader-bar"></div></div>
+</div>
 
-    <div class="container">
-        <h2>Barka da Zuwa Pioneer! 👋</h2>
-        <p>Wannan shi ne shafin NaijaCall da aka haɗa na musamman domin Pi Browser da Pi Ecosystem.</p>
-        
-        <!-- Alamar Pi (Zaka iya canza src idan kana da hoto) -->
-        <svg class="pi-logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="50" cy="50" r="45" fill="#1a0933"/>
-            <path d="M35 30H65V38H54V60C54 65 50 68 45 68C40 68 37 64 37 60V45H45V60C45 61 46 62 47 62C48 62 49 61 49 60V38H35V30Z" fill="#e0a904"/>
-        </svg>
+<!-- ══════════════════════════════════════════
+     ONBOARDING
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-onboard">
+  <div class="onboard-wrap">
+    <div class="onboard-emoji">📞</div>
+    <div class="onboard-title">Stay Connected<br>with <em>Home</em></div>
+    <div class="onboard-body">NaijaCall makes it easy to call Nigeria from abroad — no confusion, no wrong numbers.</div>
+    <div class="steps-row">
+      <div class="step"><div class="step-num">1</div><div class="step-text">Pick the country you're calling from</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text">Enter the Nigeria number as normal</div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text">Choose your calling method and connect</div></div>
+    </div>
+    <button class="btn-primary" onclick="goToAuth()">Get Started — It's Free</button>
+    <button class="btn-secondary" onclick="skipAuth()">Skip for now</button>
+  </div>
+</div>
 
-        <button class="btn" id="login-btn" onclick="authPi()">Haɗa da Pi Account</button>
+<!-- ══════════════════════════════════════════
+     AUTH SCREEN
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-auth">
+  <div class="scroll-area">
+    <div class="auth-header">
+      <div style="font-size:2.5rem;margin-bottom:10px">🇳🇬</div>
+      <h2>Welcome to NaijaCall</h2>
+      <p>Create an account to save contacts & manage your plan</p>
+    </div>
+    <div class="auth-body">
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchAuthTab('signup',this)">Create Account</button>
+        <button class="auth-tab" onclick="switchAuthTab('login',this)">Sign In</button>
+      </div>
 
-        <div class="user-info" id="user-box">
-            <p><strong>Suna:</strong> <span id="username">...</span></p>
-            <p><strong>UID:</strong> <span id="uid">...</span></p>
+      <div id="tab-signup">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input class="form-input" type="text" id="auth-name" placeholder="e.g. Amina Bello"/>
         </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input class="form-input" type="email" id="auth-email-s" placeholder="you@email.com"/>
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input class="form-input" type="tel" id="auth-phone-s" placeholder="e.g. 08031234567"/>
+        </div>
+        <div class="form-group">
+          <label>Referral Code (optional)</label>
+          <input class="form-input" type="text" id="auth-referral-s" placeholder="Leave blank if none"/>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input class="form-input" type="password" id="auth-pass-s" placeholder="Min. 6 characters"/>
+        </div>
+        <button class="btn-primary" id="signup-btn" onclick="doSignup()">Create Free Account</button>
+        <div class="auth-divider">— or sign up with —</div>
+        <div class="social-login">
+          <button class="social-btn" onclick="socialLogin('Google')">🌐 Google</button>
+          <button class="social-btn" onclick="socialLogin('Facebook')">👤 Facebook</button>
+        </div>
+        <div class="terms">By continuing you agree to our <a href="#">Terms of Service</a> & <a href="#">Privacy Policy</a></div>
+      </div>
 
-        <button class="btn" style="background:#1a0933; color:white; margin-top:20px;" onclick="payPi()">Gudanar da Biya (Pay 1 Pi)</button>
+      <div id="tab-login" class="hidden">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input class="form-input" type="email" id="auth-email-l" placeholder="you@email.com"/>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input class="form-input" type="password" id="auth-pass-l" placeholder="Your password"/>
+        </div>
+        <div style="text-align:right;margin-bottom:16px">
+          <a href="#" style="font-size:0.78rem;color:var(--green);font-weight:600">Forgot Password?</a>
+        </div>
+        <button class="btn-primary" onclick="doLogin()">Sign In</button>
+        <div class="auth-divider">— or sign in with —</div>
+        <div class="social-login">
+          <button class="social-btn" onclick="socialLogin('Google')">🌐 Google</button>
+          <button class="social-btn" onclick="socialLogin('Facebook')">👤 Facebook</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     HOME SCREEN
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-home">
+  <div class="status-bar"></div>
+  <div class="top-bar">
+    <div class="logo">Naija<span>Call</span></div>
+    <div class="top-right">
+      <span class="badge-plan" id="home-plan-badge">Free</span>
+      <button class="avatar-btn" onclick="showScreen('screen-profile')">👤</button>
+    </div>
+  </div>
+  <div class="scroll-area">
+    <!-- Hero -->
+    <div class="home-hero">
+      <div class="home-greeting">Good day,</div>
+      <div class="home-name" id="home-username">Caller 👋</div>
+      <div class="plan-card">
+        <div class="plan-card-left">
+          <strong id="home-plan-name">Free Plan</strong>
+          <span id="home-plan-desc">3 calls per day</span>
+        </div>
+        <button class="plan-upgrade-btn" onclick="showScreen('screen-plans')">⬆ Upgrade</button>
+      </div>
+      <div class="calls-remaining">
+        <span id="calls-left-label">3 calls left today</span>
+        <div class="calls-bar"><div class="calls-fill" id="calls-fill" style="width:100%"></div></div>
+      </div>
     </div>
 
-    <footer>
-        &copy; 2026 NaijaCall Pi Clone. Duka haƙƙoƙi sun adana.
-    </footer>
+    <!-- Promo -->
+    <div class="promo-banner">
+      <div style="font-size:2rem">🎉</div>
+      <div class="promo-text" style="flex:1">
+        <strong>Get 30 days FREE Premium</strong>
+        <span>Unlimited calls + WhatsApp + Skype</span>
+      </div>
+      <button class="promo-btn" onclick="showScreen('screen-plans')">Claim</button>
+    </div>
 
-    <script>
-        // Fara amfani da Pi SDK
-        const Pi = window.Pi;
-        Pi.init({ version: "2.0", sandbox: true }); // Zaka canza sandbox ya koma false idan ka tura shi live
+    <!-- Quick Actions -->
+    <div class="section-title">Quick Actions</div>
+    <div class="quick-grid">
+      <div class="quick-card" onclick="showScreen('screen-dialer')">
+        <div class="quick-icon">📞</div>
+        <div class="quick-name">Dial Nigeria</div>
+        <div class="quick-desc">Open the dialer</div>
+      </div>
+      <div class="quick-card" onclick="showScreen('screen-plans')">
+        <div class="quick-icon">⭐</div>
+        <div class="quick-name">Upgrade Plan</div>
+        <div class="quick-desc">Unlock unlimited calls</div>
+      </div>
+      <div class="quick-card" onclick="openWhatsApp()">
+        <div class="quick-icon">💬</div>
+        <div class="quick-name">WhatsApp Call</div>
+        <div class="quick-desc">Free over data</div>
+      </div>
+      <div class="quick-card" onclick="openRateGuide()">
+        <div class="quick-icon">💰</div>
+        <div class="quick-name">Call Rates</div>
+        <div class="quick-desc">Check your rates</div>
+      </div>
+    </div>
 
-        async function authPi() {
-            try {
-                const scopes = ['username', 'payments'];
-                function onIncompletePaymentFound(payment) {
-                    console.log("Akwai biyan da bai kammala ba:", payment);
-                };
+    <!-- Recent Calls -->
+    <div class="section-title">Recent Calls</div>
+    <div class="recent-list" id="recent-list">
+      <div class="recent-item" onclick="quickCall('Mama','08031234567')">
+        <div class="recent-avatar">M</div>
+        <div class="recent-info">
+          <strong>Mama</strong>
+          <span>📞 +234 803 123 4567 · 2 hrs ago</span>
+        </div>
+        <button class="recent-call-btn">📞</button>
+      </div>
+      <div class="recent-item" onclick="quickCall('Uncle Musa','07041234567')">
+        <div class="recent-avatar">U</div>
+        <div class="recent-info">
+          <strong>Uncle Musa</strong>
+          <span>📞 +234 704 123 4567 · Yesterday</span>
+        </div>
+        <button class="recent-call-btn">📞</button>
+      </div>
+      <div class="recent-item" onclick="quickCall('Fatima','09051234567')">
+        <div class="recent-avatar">F</div>
+        <div class="recent-info">
+          <strong>Fatima</strong>
+          <span>💬 +234 905 123 4567 · 3 days ago</span>
+        </div>
+        <button class="recent-call-btn">📞</button>
+      </div>
+    </div>
+    <div style="height:10px"></div>
+  </div>
+</div>
 
-                const auth = await Pi.authenticate(scopes, onIncompletePaymentFound);
-                
-                document.getElementById('username').innerText = auth.user.username;
-                document.getElementById('uid').innerText = auth.user.uid;
-                document.getElementById('user-box').style.display = 'block';
-                document.getElementById('login-btn').innerText = "An Haɗa Kenan ✅";
-            } catch (err) {
-                alert("Kuskure wajen haɗawa da Pi: " + err.message);
-            }
+<!-- ══════════════════════════════════════════
+     DIALER SCREEN
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-dialer">
+  <div class="status-bar"></div>
+  <div class="top-bar">
+    <div class="logo">Naija<span>Call</span></div>
+    <div class="badge-plan" id="dialer-plan-badge">Free</div>
+  </div>
+  <div class="scroll-area">
+    <div class="dialer-body">
+
+      <!-- From country -->
+      <div class="caller-select-box">
+        <div class="csl">Calling From</div>
+        <div class="csl-row">
+          <div class="csl-flag" id="d-flag">🌍</div>
+          <div class="csl-info">
+            <strong id="d-cname">Choose your country</strong>
+            <span id="d-ccode">International dial code</span>
+          </div>
+          <select class="csl-sel" onchange="updateDialerCaller(this)">
+            <option value="">Select</option>
+            <option value="US|🇺🇸|United States|+1">🇺🇸 USA</option>
+            <option value="GB|🇬🇧|United Kingdom|+44">🇬🇧 UK</option>
+            <option value="CA|🇨🇦|Canada|+1">🇨🇦 Canada</option>
+            <option value="DE|🇩🇪|Germany|+49">🇩🇪 Germany</option>
+            <option value="AE|🇦🇪|UAE|+971">🇦🇪 UAE</option>
+            <option value="SA|🇸🇦|Saudi Arabia|+966">🇸🇦 Saudi Arabia</option>
+            <option value="IT|🇮🇹|Italy|+39">🇮🇹 Italy</option>
+            <option value="ZA|🇿🇦|South Africa|+27">🇿🇦 S. Africa</option>
+            <option value="GH|🇬🇭|Ghana|+233">🇬🇭 Ghana</option>
+            <option value="FR|🇫🇷|France|+33">🇫🇷 France</option>
+            <option value="AU|🇦🇺|Australia|+61">🇦🇺 Australia</option>
+            <option value="QA|🇶🇦|Qatar|+974">🇶🇦 Qatar</option>
+            <option value="MY|🇲🇾|Malaysia|+60">🇲🇾 Malaysia</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Number display -->
+      <div class="number-display">
+        <div class="ng-prefix">🇳🇬 Nigeria · +234</div>
+        <div class="number-text placeholder" id="number-display">Enter number below</div>
+      </div>
+
+      <!-- Method -->
+      <div class="method-row">
+        <div class="mth active" onclick="setMethod(this,'phone')">
+          <div class="mi">📞</div><div class="mn">Phone</div>
+        </div>
+        <div class="mth" onclick="setMethod(this,'whatsapp')">
+          <div class="mi">💬</div><div class="mn">WhatsApp</div>
+        </div>
+        <div class="mth" onclick="setMethod(this,'skype')">
+          <div class="mi">🖥️</div><div class="mn">Skype</div>
+        </div>
+      </div>
+
+      <!-- Dialpad -->
+      <div class="pad">
+        <button class="key" onclick="kp('1')"><span class="kn">1</span><span class="kl"></span></button>
+        <button class="key" onclick="kp('2')"><span class="kn">2</span><span class="kl">ABC</span></button>
+        <button class="key" onclick="kp('3')"><span class="kn">3</span><span class="kl">DEF</span></button>
+        <button class="key" onclick="kp('4')"><span class="kn">4</span><span class="kl">GHI</span></button>
+        <button class="key" onclick="kp('5')"><span class="kn">5</span><span class="kl">JKL</span></button>
+        <button class="key" onclick="kp('6')"><span class="kn">6</span><span class="kl">MNO</span></button>
+        <button class="key" onclick="kp('7')"><span class="kn">7</span><span class="kl">PQRS</span></button>
+        <button class="key" onclick="kp('8')"><span class="kn">8</span><span class="kl">TUV</span></button>
+        <button class="key" onclick="kp('9')"><span class="kn">9</span><span class="kl">WXYZ</span></button>
+        <button class="key" onclick="kp('*')"><span class="kn">*</span></button>
+        <button class="key zero" onclick="kp('0')"><span class="kn">0</span><span class="kl">+</span></button>
+        <button class="key back" onclick="kpBack()"><span class="kn">⌫</span></button>
+      </div>
+
+      <!-- Call Button -->
+      <div class="call-action" id="call-action-wrap" style="position:relative">
+        <button class="call-now-btn" id="call-now-btn" onclick="doCall()">
+          📞 &nbsp;Call Nigeria Now
+        </button>
+        <button class="save-contact-btn" onclick="saveContact()" title="Save contact">💾</button>
+        <!-- Locked overlay for free users who've used all calls -->
+        <div class="locked-overlay hidden" id="locked-overlay">
+          <div class="lock-icon">🔒</div>
+          <h3>Daily Limit Reached</h3>
+          <p>Upgrade to Premium for unlimited calls to Nigeria every day.</p>
+          <button class="unlock-btn" onclick="showScreen('screen-plans')">Unlock Unlimited Calls</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PLANS SCREEN
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-plans">
+  <div class="status-bar"></div>
+  <div class="top-bar">
+    <div class="logo">Naija<span>Call</span></div>
+    <div class="badge-plan">Plans</div>
+  </div>
+  <div class="scroll-area">
+    <div class="plans-header">
+      <div style="font-size:2rem;margin-bottom:6px">⭐</div>
+      <h2>Choose Your Plan</h2>
+      <p>Call Nigeria without limits — pick what works for you</p>
+    </div>
+    <div class="plans-body">
+      <div class="toggle-row">
+        <button class="toggle-opt active" onclick="setBilling('weekly',this)">Weekly</button>
+        <button class="toggle-opt" onclick="setBilling('monthly',this)">Monthly <span class="save-badge">SAVE 40%</span></button>
+      </div>
+
+      <div class="plan-cards">
+        <!-- FREE -->
+        <div class="plan-card-item">
+          <div class="plan-top">
+            <div>
+              <div class="plan-name">🆓 Free</div>
+              <div style="font-size:0.72rem;color:var(--gray);margin-top:3px">Always free, forever</div>
+            </div>
+            <div class="plan-price">
+              <strong>₦0</strong>
+              <span>forever</span>
+            </div>
+          </div>
+          <div class="plan-feats">
+            <div class="plan-feat"><span class="check">✓</span> 3 calls per day</div>
+            <div class="plan-feat"><span class="check">✓</span> Phone dialer only</div>
+            <div class="plan-feat"><span class="cross">✗</span> <span style="color:#bbb">WhatsApp & Skype calling</span></div>
+            <div class="plan-feat"><span class="cross">✗</span> <span style="color:#bbb">Save contacts</span></div>
+            <div class="plan-feat"><span class="cross">✗</span> <span style="color:#bbb">Call history</span></div>
+          </div>
+          <button class="subscribe-btn outline" onclick="showToast('You are on the Free plan')">Current Plan</button>
+        </div>
+
+        <!-- PREMIUM -->
+        <div class="plan-card-item popular">
+          <div class="popular-tag">⭐ MOST POPULAR</div>
+          <div class="plan-top" style="margin-top:12px">
+            <div>
+              <div class="plan-name">💎 Premium</div>
+              <div style="font-size:0.72rem;color:var(--gray);margin-top:3px">Best for regular callers</div>
+            </div>
+            <div class="plan-price">
+              <strong id="premium-price">₦500</strong>
+              <span id="premium-period">/week</span>
+            </div>
+          </div>
+          <div class="plan-feats">
+            <div class="plan-feat"><span class="check">✓</span> Unlimited calls per day</div>
+            <div class="plan-feat"><span class="check">✓</span> Phone + WhatsApp + Skype</div>
+            <div class="plan-feat"><span class="check">✓</span> Save unlimited contacts</div>
+            <div class="plan-feat"><span class="check">✓</span> Full call history</div>
+            <div class="plan-feat"><span class="check">✓</span> Priority support</div>
+          </div>
+          <button class="subscribe-btn" onclick="openMonnify('premium')">Subscribe with Monnify 💳</button>
+        </div>
+
+        <!-- FAMILY -->
+        <div class="plan-card-item">
+          <div class="plan-top">
+            <div>
+              <div class="plan-name">👨‍👩‍👧 Family</div>
+              <div style="font-size:0.72rem;color:var(--gray);margin-top:3px">Share with up to 5 people</div>
+            </div>
+            <div class="plan-price">
+              <strong id="family-price">₦1,200</strong>
+              <span id="family-period">/week</span>
+            </div>
+          </div>
+          <div class="plan-feats">
+            <div class="plan-feat"><span class="check">✓</span> Everything in Premium</div>
+            <div class="plan-feat"><span class="check">✓</span> Up to 5 family accounts</div>
+            <div class="plan-feat"><span class="check">✓</span> Shared contacts list</div>
+            <div class="plan-feat"><span class="check">✓</span> Group call scheduling</div>
+            <div class="plan-feat"><span class="check">✓</span> 24/7 WhatsApp support</div>
+          </div>
+          <button class="subscribe-btn" onclick="openMonnify('family')">Subscribe with Monnify 💳</button>
+        </div>
+      </div>
+
+      <!-- Monnify note -->
+      <div class="paystack-note">
+        <div class="ps-icon">🔐</div>
+        <p><strong>Secure payment via Monnify (Moniepoint).</strong> Accepts Nigerian debit cards, bank transfer, USSD, and phone number payments. CBN-licensed. Cancel anytime.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PROFILE SCREEN
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-profile">
+  <div class="status-bar"></div>
+  <div class="top-bar">
+    <div class="logo">Naija<span>Call</span></div>
+  </div>
+  <div class="scroll-area">
+    <div class="profile-header">
+      <div class="profile-avatar" id="profile-avatar">👤</div>
+      <div class="profile-name" id="profile-name">Guest User</div>
+      <div class="profile-email" id="profile-email">Not signed in</div>
+      <div class="profile-plan-tag" id="profile-plan-tag">Free Plan</div>
+    </div>
+    <div class="profile-body">
+
+      <div class="settings-group">
+        <div class="settings-group-title">Account</div>
+        <div class="settings-list">
+          <div class="settings-item" onclick="showToast('Edit profile coming soon')">
+            <span class="settings-icon">✏️</span>
+            <span class="settings-text">Edit Profile</span>
+            <span class="settings-arrow">›</span>
+          </div>
+          <div class="settings-item" onclick="showScreen('screen-plans')">
+            <span class="settings-icon">⭐</span>
+            <span class="settings-text">My Plan</span>
+            <span class="settings-value" id="profile-plan-val">Free</span>
+          </div>
+          <div class="settings-item" onclick="showToast('Billing history coming soon')">
+            <span class="settings-icon">🧾</span>
+            <span class="settings-text">Payment History</span>
+            <span class="settings-arrow">›</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-group-title">Calling</div>
+        <div class="settings-list">
+          <div class="settings-item" onclick="showToast('Your saved contacts will appear here')">
+            <span class="settings-icon">📒</span>
+            <span class="settings-text">Saved Nigeria Contacts</span>
+            <span class="settings-arrow">›</span>
+          </div>
+          <div class="settings-item" onclick="showToast('Full call history available on Premium')">
+            <span class="settings-icon">📋</span>
+            <span class="settings-text">Call History</span>
+            <span class="settings-arrow">›</span>
+          </div>
+          <div class="settings-item" onclick="showToast('Default country saved')">
+            <span class="settings-icon">🌍</span>
+            <span class="settings-text">Default Calling Country</span>
+            <span class="settings-value" id="profile-country">Not set</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-group-title">Support</div>
+        <div class="settings-list">
+          <div class="settings-item" onclick="openWhatsAppSupport()">
+            <span class="settings-icon">💬</span>
+            <span class="settings-text">WhatsApp Support</span>
+            <span class="settings-arrow">›</span>
+          </div>
+          <div class="settings-item" onclick="showToast('FAQs coming soon')">
+            <span class="settings-icon">❓</span>
+            <span class="settings-text">How to Call Nigeria (FAQ)</span>
+            <span class="settings-arrow">›</span>
+          </div>
+          <div class="settings-item" onclick="rateApp()">
+            <span class="settings-icon">⭐</span>
+            <span class="settings-text">Rate NaijaCall</span>
+            <span class="settings-arrow">›</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-group-title">Legal</div>
+        <div class="settings-list">
+          <div class="settings-item" onclick="showToast('Privacy Policy')">
+            <span class="settings-icon">🔒</span>
+            <span class="settings-text">Privacy Policy</span>
+            <span class="settings-arrow">›</span>
+          </div>
+          <div class="settings-item" onclick="showToast('Terms of Service')">
+            <span class="settings-icon">📄</span>
+            <span class="settings-text">Terms of Service</span>
+            <span class="settings-arrow">›</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" style="background:var(--red)" onclick="doLogout()">Sign Out</button>
+      <div style="text-align:center;margin-top:12px;font-size:0.7rem;color:var(--gray)">NaijaCall v1.0.0 · Made for the Nigerian Diaspora 🇳🇬</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     BOTTOM NAVIGATION
+══════════════════════════════════════════ -->
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="nav-item active" onclick="navTo('screen-home',this)" id="nav-home">
+    <span class="nav-icon">🏠</span>
+    <span class="nav-label">Home</span>
+  </button>
+  <button class="nav-item" onclick="navTo('screen-dialer',this)" id="nav-dialer">
+    <span class="nav-icon">📞</span>
+    <span class="nav-label">Dialer</span>
+  </button>
+  <button class="nav-call-btn" onclick="navTo('screen-dialer',document.getElementById('nav-dialer'))">📞</button>
+  <button class="nav-item" onclick="navTo('screen-plans',this)" id="nav-plans">
+    <span class="nav-icon">⭐</span>
+    <span class="nav-label">Plans</span>
+  </button>
+  <button class="nav-item" onclick="navTo('screen-profile',this)" id="nav-profile">
+    <span class="nav-icon">👤</span>
+    <span class="nav-label">Profile</span>
+  </button>
+</nav>
+
+<!-- ══════════════════════════════════════════
+     MONNIFY MODAL
+══════════════════════════════════════════ -->
+<div class="modal-bg" id="monnify-modal">
+  <div class="modal" style="position:relative">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeMonnify()">✕</button>
+    <h3>💳 Subscribe with Monnify</h3>
+    <p id="monnify-plan-desc">You're subscribing to Premium Weekly for ₦500.</p>
+    <div class="form-group">
+      <label>Email for payment receipt</label>
+      <input class="form-input" type="email" id="pay-email" placeholder="you@email.com"/>
+    </div>
+    <div class="form-group">
+      <label>Your Full Name</label>
+      <input class="form-input" type="text" id="pay-name" placeholder="e.g. Adam Bukar"/>
+    </div>
+    <div class="form-group">
+      <label>Phone Number</label>
+      <input class="form-input" type="tel" id="pay-phone" placeholder="e.g. 08031234567"/>
+    </div>
+    <div style="background:#e8f5ee;border:1.5px solid #b2dcc0;border-radius:12px;padding:13px;margin-bottom:16px;font-size:0.78rem;color:var(--gray)">
+      🔐 <strong style="color:var(--dark)">Secured by Monnify (Moniepoint).</strong> Accepts: Bank transfer · Debit cards (Visa, Mastercard, Verve) · USSD · Phone number. CBN-licensed.
+    </div>
+    <button class="btn-primary" onclick="launchMonnify()" id="pay-btn">
+      Pay Now via Monnify 🚀
+    </button>
+    <div style="text-align:center;margin-top:10px;font-size:0.72rem;color:var(--gray)">
+      Cancel anytime · Auto-renews · No hidden fees
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ──
+const state = {
+  user: null,
+  plan: 'free',     // free | premium | family
+  billing: 'weekly',
+  callsToday: 3,
+  callsMax: 3,
+  dialNumber: '',
+  method: 'phone',
+  callerCountry: null,
+  currentPlanToPay: null,
+};
+
+const PRICES = {
+  weekly:  { premium: '₦500', family: '₦1,200', premiumRaw: 50000, familyRaw: 120000 },
+  monthly: { premium: '₦1,500', family: '₦3,500', premiumRaw: 150000, familyRaw: 350000 },
+};
+
+// ── NAIJACALL REFERRAL API (Cloudflare Worker) ──
+const REFERRAL_API_BASE = "https://naijacall-referral-api.www-ad24971432.workers.dev";
+
+// ── MONNIFY CREDENTIALS (replace with your real keys from app.monnify.com) ──
+const MONNIFY_API_KEY     = 'MK_TEST_XXXXXXXXXXXXXXXXXX';  // Your API Key
+const MONNIFY_CONTRACT    = '1234567890';                  // Your Contract Code
+
+// ── INIT ──
+window.addEventListener('load', () => {
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+  loadState();
+  setTimeout(() => {
+    showScreen('screen-onboard');
+    if (state.user) {
+      showScreen('screen-home');
+      document.getElementById('bottom-nav').style.display = 'flex';
+      updateHomeUI();
+    }
+  }, 2000);
+});
+
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem('naijacall_state') || '{}');
+    if (s.user) state.user = s.user;
+    if (s.plan) state.plan = s.plan;
+    if (s.callsToday !== undefined) state.callsToday = s.callsToday;
+    if (s.callerCountry) state.callerCountry = s.callerCountry;
+    // Reset daily calls at midnight
+    const today = new Date().toDateString();
+    if (s.callDate !== today) { state.callsToday = state.plan === 'free' ? 3 : 9999; }
+  } catch(e) {}
+}
+
+function saveState() {
+  localStorage.setItem('naijacall_state', JSON.stringify({
+    user: state.user, plan: state.plan,
+    callsToday: state.callsToday, callerCountry: state.callerCountry,
+    callDate: new Date().toDateString(),
+  }));
+  // Keep a standalone copy of the referral code for easy access elsewhere in the app
+  if (state.user && state.user.referralCode) {
+    localStorage.setItem('naijacall_referral_code', state.user.referralCode);
+  }
+}
+
+// ── SCREEN NAVIGATION ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const mainScreens = ['screen-home','screen-dialer','screen-plans','screen-profile'];
+  document.getElementById('bottom-nav').style.display = mainScreens.includes(id) ? 'flex' : 'none';
+}
+
+function navTo(screenId, el) {
+  showScreen(screenId);
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+}
+
+// ── ONBOARDING ──
+function goToAuth() { showScreen('screen-auth'); }
+function skipAuth() {
+  state.user = { name: 'Guest', email: 'guest@naijacall.app' };
+  enterApp();
+}
+
+// ── AUTH ──
+function switchAuthTab(tab, el) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-signup').classList.toggle('hidden', tab !== 'signup');
+  document.getElementById('tab-login').classList.toggle('hidden', tab !== 'login');
+}
+
+async function doSignup() {
+  const name = document.getElementById('auth-name').value.trim();
+  const email = document.getElementById('auth-email-s').value.trim();
+  const phone = document.getElementById('auth-phone-s').value.trim();
+  const referralCode = document.getElementById('auth-referral-s').value.trim();
+  const pass = document.getElementById('auth-pass-s').value;
+
+  if (!name || !email || !phone || !pass) { showToast('⚠️ Please fill all fields'); return; }
+  if (pass.length < 6) { showToast('⚠️ Password too short'); return; }
+
+  const btn = document.getElementById('signup-btn');
+  btn.disabled = true;
+  btn.textContent = 'Creating account...';
+
+  let myReferralCode = null;
+
+  try {
+    const response = await fetch(`${REFERRAL_API_BASE}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        full_name: name,
+        phone_number: phone,
+        referral_code: referralCode || undefined,
+      }),
+    });
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      myReferralCode = data.user.referral_code;
+    } else {
+      // Don't block account creation over a referral hiccup — just let them know
+      showToast('⚠️ Signed up, but referral sync failed');
+    }
+  } catch (err) {
+    showToast('⚠️ Signed up, but no internet for referral sync');
+  }
+
+  state.user = { name, email, phone, referralCode: myReferralCode };
+  saveState();
+
+  btn.disabled = false;
+  btn.textContent = 'Create Free Account';
+
+  enterApp();
+}
+
+function doLogin() {
+  const email = document.getElementById('auth-email-l').value.trim();
+  const pass = document.getElementById('auth-pass-l').value;
+  if (!email || !pass) { showToast('⚠️ Enter your email and password'); return; }
+  state.user = { name: email.split('@')[0], email };
+  saveState();
+  enterApp();
+}
+
+function socialLogin(provider) {
+  showToast(`${provider} login — connect your backend here`);
+  state.user = { name: 'NaijaUser', email: 'user@naijacall.app' };
+  setTimeout(() => { saveState(); enterApp(); }, 800);
+}
+
+function enterApp() {
+  showScreen('screen-home');
+  document.getElementById('bottom-nav').style.display = 'flex';
+  updateHomeUI();
+  updateProfileUI();
+}
+
+function doLogout() {
+  state.user = null; state.plan = 'free'; state.callsToday = 3;
+  saveState();
+  showScreen('screen-onboard');
+}
+
+// ── HOME UI ──
+function updateHomeUI() {
+  if (!state.user) return;
+  const firstName = state.user.name.split(' ')[0];
+  document.getElementById('home-username').textContent = firstName + ' 👋';
+  const planLabels = { free:'Free Plan', premium:'Premium ⭐', family:'Family 👨‍👩‍👧' };
+  document.getElementById('home-plan-name').textContent = planLabels[state.plan] || 'Free Plan';
+  document.getElementById('home-plan-badge').textContent = state.plan === 'free' ? 'Free' : '⭐ Premium';
+  document.getElementById('dialer-plan-badge').textContent = state.plan === 'free' ? 'Free' : '⭐ Premium';
+  const max = state.plan === 'free' ? 3 : 999;
+  const left = state.callsToday;
+  document.getElementById('calls-left-label').textContent = state.plan === 'free' ? `${left} calls left today` : 'Unlimited calls today';
+  document.getElementById('calls-fill').style.width = state.plan === 'free' ? `${(left/max)*100}%` : '100%';
+  document.getElementById('home-plan-desc').textContent = state.plan === 'free' ? '3 calls per day · upgrade for unlimited' : 'Unlimited calls every day';
+  updateLockedOverlay();
+}
+
+function updateLockedOverlay() {
+  const locked = state.plan === 'free' && state.callsToday <= 0;
+  document.getElementById('locked-overlay').classList.toggle('hidden', !locked);
+}
+
+// ── PROFILE UI ──
+function updateProfileUI() {
+  if (!state.user) return;
+  const n = state.user.name;
+  document.getElementById('profile-name').textContent = n;
+  document.getElementById('profile-email').textContent = state.user.email;
+  document.getElementById('profile-avatar').textContent = n[0].toUpperCase();
+  const planLabels = { free:'Free Plan', premium:'Premium ⭐', family:'Family Plan 👨‍👩‍👧' };
+  const pl = planLabels[state.plan] || 'Free Plan';
+  document.getElementById('profile-plan-tag').textContent = pl;
+  document.getElementById('profile-plan-val').textContent = pl;
+}
+
+// ── DIALER ──
+function updateDialerCaller(sel) {
+  const val = sel.value; if (!val) return;
+  const [code, flag, name, dialCode] = val.split('|');
+  document.getElementById('d-flag').textContent = flag;
+  document.getElementById('d-cname').textContent = name;
+  document.getElementById('d-ccode').textContent = 'Dialing from ' + dialCode;
+  state.callerCountry = { code, flag, name, dialCode };
+  saveState();
+  document.getElementById('profile-country').textContent = name;
+}
+
+function kp(d) {
+  if (state.dialNumber.replace(/\D/g,'').length >= 11) return;
+  state.dialNumber += d;
+  renderNumber();
+}
+
+function kpBack() {
+  state.dialNumber = state.dialNumber.slice(0,-1);
+  renderNumber();
+}
+
+function renderNumber() {
+  const el = document.getElementById('number-display');
+  if (!state.dialNumber) {
+    el.textContent = 'Enter number below';
+    el.classList.add('placeholder');
+  } else {
+    el.classList.remove('placeholder');
+    // Format nicely
+    const d = state.dialNumber.replace(/\D/g,'');
+    let fmt = d;
+    if (d.length > 7) fmt = d.slice(0,3)+' '+d.slice(3,7)+' '+d.slice(7);
+    else if (d.length > 3) fmt = d.slice(0,3)+' '+d.slice(3);
+    el.textContent = fmt;
+  }
+}
+
+function setMethod(el, method) {
+  document.querySelectorAll('.mth').forEach(m => m.classList.remove('active'));
+  el.classList.add('active');
+  state.method = method;
+  if (method !== 'phone' && state.plan === 'free') {
+    showToast('💎 WhatsApp & Skype require Premium');
+    setTimeout(() => showScreen('screen-plans'), 1200);
+  }
+}
+
+function getIntlNumber() {
+  let raw = state.dialNumber.replace(/\D/g,'');
+  if (raw.startsWith('0')) raw = raw.slice(1);
+  return '+234' + raw;
+}
+
+function doCall() {
+  const raw = state.dialNumber.replace(/\D/g,'');
+  if (raw.length < 10) { showToast('⚠️ Enter a valid 10-11 digit number'); return; }
+  if (state.plan === 'free' && state.callsToday <= 0) {
+    showScreen('screen-plans'); return;
+  }
+  if (state.method !== 'phone' && state.plan === 'free') {
+    showScreen('screen-plans'); return;
+  }
+  const intl = getIntlNumber();
+  if (state.plan === 'free') {
+    state.callsToday = Math.max(0, state.callsToday - 1);
+    saveState(); updateHomeUI();
+  }
+  if (state.method === 'phone') {
+    showToast('📞 Opening dialer for ' + intl);
+    window.location.href = 'tel:' + intl;
+  } else if (state.method === 'whatsapp') {
+    showToast('💬 Opening WhatsApp for ' + intl);
+    window.open('https://wa.me/' + intl.replace('+',''), '_blank');
+  } else if (state.method === 'skype') {
+    showToast('🖥️ Opening Skype for ' + intl);
+    window.open('skype:' + intl + '?call', '_blank');
+  }
+}
+
+function quickCall(name, number) {
+  state.dialNumber = number;
+  renderNumber();
+  showScreen('screen-dialer');
+  document.getElementById('nav-dialer').click();
+}
+
+function saveContact() {
+  if (!state.dialNumber) { showToast('Enter a number first'); return; }
+  if (state.plan === 'free') { showToast('💎 Save contacts with Premium'); showScreen('screen-plans'); return; }
+  showToast('✅ Contact saved');
+}
+
+// ── PLANS ──
+function setBilling(type, el) {
+  state.billing = type;
+  document.querySelectorAll('.toggle-opt').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const period = type === 'weekly' ? '/week' : '/month';
+  document.getElementById('premium-price').textContent = PRICES[type].premium;
+  document.getElementById('premium-period').textContent = period;
+  document.getElementById('family-price').textContent = PRICES[type].family;
+  document.getElementById('family-period').textContent = period;
+}
+
+// ── MONNIFY ──
+function openMonnify(plan) {
+  state.currentPlanToPay = plan;
+  const p = PRICES[state.billing];
+  const period = state.billing === 'weekly' ? 'Weekly' : 'Monthly';
+  const price  = plan === 'premium' ? p.premium : p.family;
+  const planName = plan === 'premium' ? 'Premium' : 'Family';
+  document.getElementById('monnify-plan-desc').textContent =
+    `You're subscribing to ${planName} ${period} for ${price}.`;
+  if (state.user) {
+    document.getElementById('pay-email').value = state.user.email || '';
+    document.getElementById('pay-name').value  = state.user.name  || '';
+  }
+  document.getElementById('monnify-modal').classList.add('open');
+}
+
+function closeMonnify() {
+  document.getElementById('monnify-modal').classList.remove('open');
+}
+
+function launchMonnify() {
+  const email = document.getElementById('pay-email').value.trim();
+  const name  = document.getElementById('pay-name').value.trim();
+  const phone = document.getElementById('pay-phone').value.trim();
+  if (!email) { showToast('⚠️ Enter your email'); return; }
+  if (!name)  { showToast('⚠️ Enter your name');  return; }
+
+  const p        = PRICES[state.billing];
+  const plan     = state.currentPlanToPay;
+  const amount   = plan === 'premium' ? p.premiumRaw : p.familyRaw; // in kobo
+  const planName = plan === 'premium' ? 'Premium' : 'Family';
+  const ref      = 'NAIJACALL_' + Date.now();
+
+  // ── Real Monnify integration ──
+  // Get your API Key + Contract Code from app.monnify.com → Settings → API Keys
+  if (typeof MonnifySDK !== 'undefined') {
+    MonnifySDK.initialize({
+      amount: amount / 100,           // Monnify uses whole Naira
+      currency: 'NGN',
+      reference: ref,
+      customerFullName: name,
+      customerEmail: email,
+      customerMobileNumber: phone,
+      apiKey: MONNIFY_API_KEY,
+      contractCode: MONNIFY_CONTRACT,
+      paymentDescription: 'NaijaCall ' + planName + ' Plan',
+      metadata: { plan: planName, billing: state.billing },
+      onLoadStart: () => { console.log('Monnify loading...'); },
+      onLoadComplete: () => { console.log('Monnify ready'); },
+      onComplete: function(response) {
+        if (response.status === 'SUCCESS' || response.paymentStatus === 'PAID') {
+          closeMonnify();
+          activatePlan(plan);
+          showToast('🎉 Payment successful! Welcome to ' + planName + '!');
+        } else {
+          showToast('⚠️ Payment not completed. Please try again.');
         }
+      },
+      onClose: function(data) {
+        showToast('Payment window closed');
+      },
+    });
+  } else {
+    // Demo mode (Monnify SDK not loaded yet)
+    closeMonnify();
+    showToast('✅ Demo mode: activating ' + planName + ' plan...');
+    setTimeout(() => { activatePlan(plan); showToast('🎉 ' + planName + ' plan activated!'); }, 800);
+  }
+}
 
-        async function payPi() {
-            try {
-                const paymentData = {
-                    amount: 1.0,
-                    memo: "Biyan kuɗin kiran NaijaCall a Pi Network",
-                    metadata: { type: "call_subscription" }
-                };
+function activatePlan(plan) {
+  state.plan = plan;
+  state.callsToday = 9999;
+  saveState();
+  updateHomeUI();
+  updateProfileUI();
+  showScreen('screen-home');
+}
 
-                const callbacks = {
-                    onReadyForServerApproval: function(paymentId) {
-                        console.log("Jiran amincewar Server: ", paymentId);
-                    },
-                    onReadyForServerCompletion: function(paymentId, txid) {
-                        console.log("An gama biya: ", txid);
-                        alert("An karɓi kudin ku, Na gode!");
-                    },
-                    onCancel: function(paymentId) {
-                        console.log("An fasa biya");
-                    },
-                    onError: function(error, payment) {
-                        console.error("Kuskure:", error);
-                    }
-                };
+// ── MISC ──
+function openWhatsApp() {
+  if (state.plan === 'free') { showToast('💎 WhatsApp calling needs Premium'); showScreen('screen-plans'); return; }
+  showToast('Open WhatsApp and dial your Nigeria number');
+  window.open('https://wa.me/', '_blank');
+}
+function openRateGuide() { showToast('Compare rates at tariffic.com'); window.open('https://www.tariffic.com/en/call/Nigeria','_blank'); }
+function openWhatsAppSupport() { window.open('https://wa.me/2348000000000?text=Hello%2C%20I%20need%20help%20with%20NaijaCall', '_blank'); }
+function rateApp() { showToast('Thank you! Rating opens in Play Store'); }
 
-                await Pi.createPayment(paymentData, callbacks);
-            } catch (err) {
-                alert("Ba za a iya kiran tsarin biya ba: " + err.message);
-            }
-        }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
 
-        // Rikodin Service Worker na PWA
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-            .then(() => console.log('Service Worker Registered'))
-            .catch(err => console.log('SW Registration Failed', err));
-        }
-    </script>
+// ── CLOSE MODAL ON BG CLICK ──
+document.getElementById('monnify-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeMonnify();
+});
+</script>
+
+<!-- Load Monnify SDK -->
+<script type="text/javascript" src="https://sdk.monnify.com/plugin/monnify.js"></script>
+</div><!-- end app-wrapper -->
 </body>
 </html>
